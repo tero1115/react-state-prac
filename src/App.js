@@ -1,5 +1,5 @@
 import './App.css';
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import Item from "./Item";
 
 function App() {
@@ -9,21 +9,41 @@ function App() {
     // 렌더링 때마다 안바뀌게 하려면 state를 사용해야하고
     // 바뀌어도 상관 없으면 일반 변수를 사용한다.
 
-    const randomNumber1 = Math.random();
-    const [randomNumber2] = useState(Math.random());
-
-    const gameList = ["메이플스토리", "리그오브레전드", "서든어택", "배틀그라운드"];
+    const [movieList, setMovieList] = useState([]);
 
     const changeSearchValue = (event) => {
         setSearchValue(prev => event.target.value);
     }
 
+    // useEffect(실행할함수, 감지할 상태 리스트);
+
+    useEffect(()=>{
+        // console.log("통신");
+        fetch("https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=f5eef3421c602c6cb7ea224104795888&targetDt=20230930")
+            .then(res => res.json())
+            .then((result)=>{
+                console.log(result)
+                setMovieList(prev => result.boxOfficeResult.dailyBoxOfficeList)
+
+            })
+            .catch((error)=>{
+                console.error(error);
+            });
+    } , []);
+
+    useEffect(()=>{
+        console.log("상태가 바뀜");
+    } , [searchValue]);
+
+
   return (
     <div>
-        <div>{randomNumber1}</div>
-        <div>{randomNumber2}</div>
         <input value={searchValue} onChange={changeSearchValue} placeholder={"검색어를 입력해주세요"}/>
-        <ul>{gameList.filter(el => el.includes(searchValue)).map((el, index) => <Item key={index} data={el} />)}</ul>
+        <ul>
+            {movieList
+            .filter(el => el.movieNm.includes(searchValue))
+            .map((el, index) => <Item key={index} data={el.movieNm} />)}
+        </ul>
     </div>
   );
 }
